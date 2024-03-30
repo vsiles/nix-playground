@@ -23,35 +23,35 @@ in
               type = types.bool;
               description = "Is the project a workspace or not ?";
             };
-            workspace-name = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
+            workspace-name = mkOption {
+              type = types.nullOr types.str;
               default = "unnamed-project";
               description = "Override since [workspace] does not support `name`";
             };
-            workspace-version = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
+            workspace-version = mkOption {
+              type = types.nullOr types.str;
               default = "0.0.0";
               description = "Override since [workspace] does not support `version`";
             };
-            name = lib.mkOption {
+            name = mkOption {
               readOnly = true;
-              type = lib.types.str;
+              type = types.str;
               description = "Name of the package";
             };
-            version = lib.mkOption {
+            version = mkOption {
               readOnly = true;
-              type = lib.types.str;
+              type = types.str;
               description = "Version of the package";
             };
-            members = lib.mkOption {
+            members = mkOption {
               readOnly = true;
-              type = lib.types.listOf lib.types.str;
+              type = types.listOf types.str;
               description = "List of the members of the workspace, if relevant";
             };
           };
           config =
             let
-              manifest = (lib.importTOML config.rustConfiguration.manifest-path);
+              manifest = lib.importTOML config.rustConfiguration.manifest-path;
               get = default: key: set: if builtins.hasAttr key set then set.${key} else default;
               get-package-info = package: {
                 name = get config.rustConfiguration.workspace-name "name" package;
