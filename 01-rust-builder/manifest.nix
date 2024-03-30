@@ -1,4 +1,4 @@
-{ self, lib, flake-parts-lib, ... }:
+{ lib, flake-parts-lib, ... }:
 
 let
   inherit (flake-parts-lib)
