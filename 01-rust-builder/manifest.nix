@@ -33,6 +33,11 @@ in
               default = "0.0.0";
               description = "Override since [workspace] does not support `version`";
             };
+            default-package = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Choose a default application when there's multiple choices";
+            };
             name = mkOption {
               readOnly = true;
               type = types.str;

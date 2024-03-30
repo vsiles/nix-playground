@@ -63,9 +63,16 @@ in
     all-packages =
       lib.lists.foldl (acc: name: acc // {"${name}" = op name; })
       {} config.rustConfiguration.members;
+    default =
+      if config.rustConfiguration.is-workspace then (
+        # TODO: check if manifest.workspace.package is set or not
+        if config.rustConfiguration.default-package == null 
+        then builtins.throw "workspace mut set the default-package option"
+        else all-packages.${config.rustConfiguration.default-package}
+      ) else my-rust-project;
   in
   {
-    packages = { default = my-rust-project; } // all-packages;
+    packages = { inherit default; } // all-packages;
     checks = {
       # Build the crate as part of `nix flake check` for convenience
       inherit my-rust-project;

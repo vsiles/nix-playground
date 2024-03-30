@@ -29,7 +29,9 @@
         rustConfiguration = {
           manifest-path = ./Cargo.toml;
           workspace-name = "my-trivial-project";
-          workspace-version = "1.0.0";
+          # there's a default value for it ;)
+          # workspace-version = "1.0.0";
+          default-package = "app_a";
         };
 
         # packages & checks are coming from the rust.nix module !
