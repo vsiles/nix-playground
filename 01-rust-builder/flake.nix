@@ -14,16 +14,12 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./manifest.nix
-        # ./rust.nix
+        ./rust.nix
       ];
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
       let
         craneLib = crane.lib.${system};
-        rust-info = pkgs.callPackage ./rust-module.nix  {
-          inherit craneLib;
-          inherit (config) rustConfiguration;
-        };
       in
       {
         rustConfiguration = {
@@ -32,8 +28,7 @@
           workspace-version = "1.0.0";
         };
 
-        # TODO: not sure the checks are correctly defined
-        inherit (rust-info) packages checks;
+        # packages & checks are coming from the rust.nix module !
 
         # TODO: apps
         # apps.default = flake-parts.lib.mkApp {
