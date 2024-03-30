@@ -22,9 +22,6 @@
       ];
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
-      let
-        craneLib = crane.lib.${system};
-      in
       {
         rustConfiguration = {
           manifest-path = ./Cargo.toml;
@@ -34,25 +31,13 @@
           default-package = "app_a";
         };
 
-        # packages & checks are coming from the rust.nix module !
+        # packages & checks & devShell are coming from the rust.nix module !
         # (see app_b for a check)
 
         # TODO: apps
         # apps.default = flake-parts.lib.mkApp {
         #   drv = my-workspace;
         # };
-
-        devShells =
-          let
-            rust = craneLib.devShell {
-              checks = self'.checks;
-              packages = [
-              ];
-            };
-          in {
-            inherit rust;
-            default = rust;
-        };
       };
       flake = {
       };

@@ -111,5 +111,16 @@ in
         partitionType = "count";
       });
     };
+    devShells =
+      let
+        rust = craneLib.devShell {
+          checks = self'.checks;
+          packages = [
+          ];
+        };
+      in {
+        inherit rust;
+        default = rust;
+      };
   });
 }
