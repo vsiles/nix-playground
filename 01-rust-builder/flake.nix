@@ -33,6 +33,7 @@
         };
 
         # packages & checks are coming from the rust.nix module !
+        # (see app_b for a check)
 
         # TODO: apps
         # apps.default = flake-parts.lib.mkApp {
