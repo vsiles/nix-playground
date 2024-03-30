@@ -1,6 +1,6 @@
-{craneLib, lib, pkgs, stdenv, system, manifest-path} :
+{craneLib, lib, pkgs, stdenv, system, rustConfiguration } :
 # if this project is a workspace, we want to create single packages for
-# every members of it
+# every members of it so we can build or run them independently
 let 
   pickBinary = { pkg, bin }:
     stdenv.mkDerivation {
@@ -14,17 +14,12 @@ let
       cp -a ${pkg}/bin/${bin} $out/bin/${bin}
       '';
     };
-  package = (pkgs.lib.evalModules {
-    modules = [
-      ./modules/manifest.nix
-      { inherit manifest-path; }
-    ];
-  }).config.package-info;
-  my-workspace = craneLib.buildPackage {
-    pname = package.name;
-    version = package.version;
+  my-rust-project = craneLib.buildPackage {
+    pname = rustConfiguration.name;
+    version = rustConfiguration.version;
     src = craneLib.cleanCargoSource (craneLib.path ./.);
     strictDeps = true;
+    # just to show how to do that
     cargoExtraArgs = "-v";
 
     buildInputs = [
@@ -34,10 +29,10 @@ let
       pkgs.libiconv
     ];
   };
-  op = name: pickBinary {pkg = my-workspace.out; bin = name; };
+  op = name: pickBinary {pkg = my-rust-project.out; bin = name; };
   all-packages =
-    lib.lists.foldl (acc: name: acc // {"${name}" = op name; }) {} package.members;
+    lib.lists.foldl (acc: name: acc // {"${name}" = op name; }) {} rustConfiguration.members;
 in
   { packages = {
-    default = my-workspace; } // all-packages;
+    default = my-rust-project; } // all-packages;
   }
