@@ -31,11 +31,8 @@
           workspace-version = "1.0.0";
         };
 
-        # checks = {
-        #   inherit (rust-info) default;
-        # };
-
-        packages = rust-info.packages;
+        # TODO: not sure the checks are correctly defined
+        inherit (rust-info) packages checks;
 
         # TODO: apps
         # apps.default = flake-parts.lib.mkApp {

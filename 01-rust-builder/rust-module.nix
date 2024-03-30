@@ -33,6 +33,7 @@ let
   all-packages =
     lib.lists.foldl (acc: name: acc // {"${name}" = op name; }) {} rustConfiguration.members;
 in
-  { packages = {
-    default = my-rust-project; } // all-packages;
+  {
+    packages = { default = my-rust-project; } // all-packages;
+    checks = { inherit my-rust-project; };
   }
