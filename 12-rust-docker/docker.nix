@@ -10,6 +10,7 @@ in
 {
   options.perSystem = mkPerSystemOption ({ inputs', config, self', pkgs, system, ... }:
   let
+    # TODO: support tag :)
     app-type = types.submodule {
       options = {
         app-name = mkOption {
@@ -31,33 +32,37 @@ in
         type = types.submodule {
           options = {
             packages = mkOption {
-              type = app-type;
+              type = types.listOf app-type;
               description = "Information about packages to build images for";
             };
           };
         };
       };
     };
-    # TODO: support tag :)
     config =
       let buildDocker = {app-name, image-name, app} :
-        let final-image-name = if image-name == null then app-name else image-name; in
-        pkgs.dockerTools.buildImage {
-          name = final-image-name;
-          tag = "latest";
-          copyToRoot = [ app ];
-          config = {
-            Cmd = [ "${app}/bin/${app-name}" ];
+        let final-image-name = if image-name == null then "docker-${app-name}" else image-name; in
+        {
+          ${final-image-name} = pkgs.dockerTools.buildImage {
+            name = final-image-name;
+            tag = "latest";
+            copyToRoot = [ app ];
+            config = {
+              Cmd = [ "${app}/bin/${app-name}" ];
+            };
           };
       };
-      inherit (config.dockerConfiguration.packages) app-name image-name;
-      in {
-        packages.dockerImage = buildDocker {
-          inherit app-name image-name;
-          app = if builtins.hasAttr app-name config.packages then
-            config.packages.${app-name}
-            else builtins.throw "Can't find application ${app-name}";
-        };
+      mkImage = {app-name, image-name} :
+        buildDocker {
+        inherit app-name image-name;
+        app = if builtins.hasAttr app-name config.packages then
+          config.packages.${app-name}
+          else builtins.throw "Can't find application ${app-name}";
       };
+      in {
+        packages =
+          lib.lists.foldl (acc: app-info: acc // (mkImage app-info)) {}
+            config.dockerConfiguration.packages;
+    };
   });
 }
