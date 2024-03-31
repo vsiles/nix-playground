@@ -28,7 +28,14 @@ in
     options = {
       dockerConfiguration = mkOption {
         description = "Information about Docker"; 
-        type = app-type;
+        type = types.submodule {
+          options = {
+            packages = mkOption {
+              type = app-type;
+              description = "Information about packages to build images for";
+            };
+          };
+        };
       };
     };
     # TODO: support tag :)
@@ -43,7 +50,7 @@ in
             Cmd = [ "${app}/bin/${app-name}" ];
           };
       };
-      inherit (config.dockerConfiguration) app-name image-name;
+      inherit (config.dockerConfiguration.packages) app-name image-name;
       in {
         packages.dockerImage = buildDocker {
           inherit app-name image-name;

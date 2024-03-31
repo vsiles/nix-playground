@@ -31,7 +31,7 @@
           # workspace-version = "1.0.0";
           default-package = "app_a";
         };
-        dockerConfiguration = {
+        dockerConfiguration.packages = {
           app-name = "app_a";
         };
 
