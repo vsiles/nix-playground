@@ -33,13 +33,6 @@
 
         # packages & checks & devShell are coming from the rust.nix module !
         # (see app_b for a check)
-
-        # TODO: apps
-        # apps.default = flake-parts.lib.mkApp {
-        #   drv = my-workspace;
-        # };
-      };
-      flake = {
       };
     };
 }
