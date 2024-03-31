@@ -1,8 +1,11 @@
-{ inputs, flake-parts-lib, ... }:
+{ inputs, lib, flake-parts-lib, ... }:
 
 let
   inherit (flake-parts-lib)
     mkPerSystemOption;
+  inherit (lib)
+    mkOption
+    types;
 in
 {
   options.perSystem = mkPerSystemOption ({ inputs', config, self', pkgs, system, ... }:
@@ -71,57 +74,68 @@ in
         then builtins.throw "workspace must set the default-package option"
         else all-packages.${config.rustConfiguration.default-package}
       ) else my-rust-project;
+    rust-packages = { inherit default; } // all-packages;
   in
   {
-    packages = { inherit default; } // all-packages;
-    checks = {
-      # Build the crate as part of `nix flake check` for convenience
-      inherit my-rust-project;
-
-      # Run clippy (and deny all warnings) on the crate source,
-      # again, reusing the dependency artifacts from above.
-      #
-      # Note that this is done as a separate derivation so that
-      # we can block the CI if there are issues here, but not
-      # prevent downstream consumers from building our crate by itself.
-      my-crate-clippy = craneLib.cargoClippy (commonArgs // {
-        inherit cargoArtifacts;
-        cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-      });
-
-      my-crate-doc = craneLib.cargoDoc (commonArgs // {
-        inherit cargoArtifacts;
-      });
-
-      my-crate-fmt = craneLib.cargoFmt basic-info;
-
-      my-crate-audit = craneLib.cargoAudit (basic-info // {
-        # Use inputs, not inputs' as this is not a flake
-        advisory-db = inputs.advisory-db;
-      });
-
-      my-crate-deny = craneLib.cargoDeny basic-info;
-
-      # TODO: learn about cargo-nextest
-      # Run tests with cargo-nextest
-      # Consider setting `doCheck = false` on `my-crate` if you do not want
-      # the tests to run twice
-      my-crate-nextest = craneLib.cargoNextest (commonArgs // {
-        inherit cargoArtifacts;
-        partitions = 1;
-        partitionType = "count";
-      });
-    };
-    devShells =
-      let
-        rust = craneLib.devShell {
-          checks = self'.checks;
-          packages = [
-          ];
-        };
-      in {
-        inherit rust;
-        default = rust;
+    options = {
+      rustPackages = mkOption {
+        description = "List of all the Rust packages that are being built";
+        type = types.listOf types.package;
+        readOnly = true;
       };
+    };
+    config = {
+      rustPackages = builtins.attrValues rust-packages;
+      packages = rust-packages;
+      checks = {
+        # Build the crate as part of `nix flake check` for convenience
+        inherit my-rust-project;
+
+        # Run clippy (and deny all warnings) on the crate source,
+        # again, reusing the dependency artifacts from above.
+        #
+        # Note that this is done as a separate derivation so that
+        # we can block the CI if there are issues here, but not
+        # prevent downstream consumers from building our crate by itself.
+        my-crate-clippy = craneLib.cargoClippy (commonArgs // {
+          inherit cargoArtifacts;
+          cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+        });
+
+        my-crate-doc = craneLib.cargoDoc (commonArgs // {
+          inherit cargoArtifacts;
+        });
+
+        my-crate-fmt = craneLib.cargoFmt basic-info;
+
+        my-crate-audit = craneLib.cargoAudit (basic-info // {
+          # Use inputs, not inputs' as this is not a flake
+          advisory-db = inputs.advisory-db;
+        });
+
+        my-crate-deny = craneLib.cargoDeny basic-info;
+
+        # TODO: learn about cargo-nextest
+        # Run tests with cargo-nextest
+        # Consider setting `doCheck = false` on `my-crate` if you do not want
+        # the tests to run twice
+        my-crate-nextest = craneLib.cargoNextest (commonArgs // {
+          inherit cargoArtifacts;
+          partitions = 1;
+          partitionType = "count";
+        });
+      };
+      devShells =
+        let
+          rust = craneLib.devShell {
+            checks = self'.checks;
+            packages = [
+            ];
+          };
+        in {
+          inherit rust;
+          default = rust;
+      };
+    };
   });
 }

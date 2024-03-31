@@ -12,6 +12,7 @@
       url = "github:rustsec/advisory-db";
       flake = false;
     };
+    nix2container.url = "github:nlewo/nix2container";
   };
 
   outputs = inputs@{ crane, flake-parts, ... }:
@@ -20,6 +21,7 @@
         ./manifest.nix
         ./rust.nix
         ./docker.nix
+        ./all.nix
       ];
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
