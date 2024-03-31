@@ -8,23 +8,27 @@ let
     types;
 in
 {
-  options.perSystem = mkPerSystemOption ({ inputs', config, self', pkgs, system, ... }: {
+  options.perSystem = mkPerSystemOption ({ inputs', config, self', pkgs, system, ... }:
+  let
+    app-type = types.submodule {
+      options = {
+        app-name = mkOption {
+          type = types.str;
+          description = "Name of the app to build an image for";
+        };
+        image-name = mkOption {
+          type = types.nullOr types.str;
+          description = "Name of the image, if different from the app name";
+          default = null;
+        };
+      };
+    };
+in
+  {
     options = {
       dockerConfiguration = mkOption {
         description = "Information about Docker"; 
-        type = types.submodule {
-          options = {
-            app-name = mkOption {
-              type = types.str;
-              description = "Name of the single app to build an image for";
-            };
-            image-name = mkOption {
-              type = types.nullOr types.str;
-              description = "Name of the image, if it needs to be different from the app name";
-              default = null;
-            };
-          };
-        };
+        type = app-type;
       };
     };
     # TODO: support tag :)
