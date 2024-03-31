@@ -19,6 +19,7 @@
       imports = [
         ./manifest.nix
         ./rust.nix
+        ./docker.nix
       ];
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
@@ -29,6 +30,10 @@
           # there's a default value for it ;)
           # workspace-version = "1.0.0";
           default-package = "app_a";
+        };
+        dockerConfiguration = {
+          app-name = "app_a";
+          app = config.packages.app_a;
         };
 
         # packages & checks & devShell are coming from the rust.nix module !

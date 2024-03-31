@@ -1,4 +1,4 @@
-{ lib, inputs, crane, flake-parts-lib, ... }:
+{ inputs, flake-parts-lib, ... }:
 
 let
   inherit (flake-parts-lib)
