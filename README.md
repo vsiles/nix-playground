@@ -1,6 +1,11 @@
 # nix-playground
 Random nix files that I write to learn stuff
 
+# DO NOT FORGET
+
+Abuse `git add` on all the files your flakes should be aware of. Just having
+them locally is not enough. Adding them is enough, commiting them works too.
+
 
 # Reading material
 
