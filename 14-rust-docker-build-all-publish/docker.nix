@@ -82,9 +82,32 @@ in
       };
       docker-packages = lib.lists.foldl (acc: app-info: acc // (mkImage app-info)) {}
             config.dockerConfiguration.packages;
+      # Simple dummy script "to do something" when we run publish
+      do-publish = app-name: app:
+        pkgs.writeShellApplication {
+          name = "publish-${app-name}.sh";
+          runtimeInputs = [ pkgs.coreutils ];
+          # TODO: not working yet: app-name is not the right input here
+          text = ''
+            hash=$(sha256sum "${app}/bin/${app-name}" | cut -d ' ' -f 1)
+            echo "hash for ${app-name}: ''${hash}"
+          '';
+        };
+      publish-drvs = lib.attrsets.mapAttrs'
+        (app-name: app: lib.nameValuePair "publish-${app-name}.sh" (do-publish app-name app))
+        docker-packages;
+      docker-publish = 
+        let
+          text = lib.attrsets.foldlAttrs (acc: script-name: app: acc + "\n${app}/bin/${script-name}") "" publish-drvs;
+        in
+        pkgs.writeShellApplication {
+          name = "docker-publish.sh";
+          inherit text;
+      };
+      final-packages = { inherit docker-publish; } // publish-drvs // docker-packages;
       in {
         dockerPackages = builtins.attrValues docker-packages;
-        packages = docker-packages;
+        packages = final-packages;
     };
   });
 }

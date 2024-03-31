@@ -75,6 +75,29 @@ in
         else all-packages.${config.rustConfiguration.default-package}
       ) else my-rust-project;
     rust-packages = { inherit default; } // all-packages;
+    runtimeInputs = [ pkgs.coreutils ];
+    do-publish = app-name: app:
+      # Simple dummy script "to do something" when we run publish
+      pkgs.writeShellApplication {
+        name = "publish-${app-name}.sh";
+        inherit runtimeInputs;
+        text = ''
+          hash=$(sha256sum "${app}/bin/${app-name}" | cut -d ' ' -f 1)
+          echo "hash for ${app-name}: ''${hash}"
+        '';
+      };
+    publish-drvs = lib.attrsets.mapAttrs'
+      (app-name: app: lib.nameValuePair "publish-${app-name}.sh" (do-publish app-name app))
+      all-packages; # we don't want default in here
+    rust-publish = 
+      let
+        text = lib.attrsets.foldlAttrs (acc: script-name: app: acc + "\n${app}/bin/${script-name}") "" publish-drvs;
+      in
+      pkgs.writeShellApplication {
+        name = "rust-publish.sh";
+        inherit runtimeInputs text;
+    };
+    final-packages = { inherit rust-publish; } // publish-drvs // rust-packages;
   in
   {
     options = {
@@ -85,8 +108,8 @@ in
       };
     };
     config = {
-      rustPackages = builtins.attrValues rust-packages;
-      packages = rust-packages;
+      rustPackages = builtins.attrValues all-packages;
+      packages = final-packages;
       checks = {
         # Build the crate as part of `nix flake check` for convenience
         inherit my-rust-project;
