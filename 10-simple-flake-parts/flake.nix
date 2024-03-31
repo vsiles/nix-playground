@@ -1,3 +1,4 @@
+# VS: I left most of the template comments as is. My additions start with VS:
 {
   description = "Simple flake-parts project";
 
@@ -26,9 +27,14 @@
         # module parameters provide easy access to attributes of the same
         # system.
 
+        # VS: Using parts, we no longer have to use evalModules, which is done
+        # VS: for us automatically. So we just have to set the options "right
+        # VS: here".
         # VS: toplevel options are weird, they lack scope
         my-simple-option = 1664;
 
+        # VS: this is why I introduced the `my-options` sub-module to try and
+        # VS: make things easier to track.
         # VS: this is where we set the input options of our simple module.
         # VS: modules will provide type checking (try to change 10 into "10")
         # VS: and exhaustivity (try removing some of them)
@@ -37,7 +43,10 @@
         my-options.some-str-with-default1 = "some string value";
 
         # Equivalent to  inputs'.nixpkgs.legacyPackages.hello;
-        # VS: simple usage of an "output" that I just as debug
+        # packages.default = pkgs.hello;
+
+        # VS: simple usage of an "output" that I just use as debug
+        # VS: using `config` is how we access the "output" options.
         packages.default = builtins.trace (toString config.my-options.some-output) pkgs.hello;
       };
       flake = {

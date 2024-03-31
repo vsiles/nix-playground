@@ -18,10 +18,10 @@ in
         type = types.int;
       };
 
-      # VS: I'd introduce `my-options` so that things are clearer when
-      # VS: we import the module in a flake. It could be removed and
-      # VS: all options would be directly accessible from the `config`
-      # VS: input
+      # VS: I introduce `my-options` so that things are clearer when
+      # VS: we import the module in a flake using parts.
+      # VS: It could be removed and all options would be directly accessible
+      # from the `config` VS: input
       my-options = mkOption {
         description = "Sub module just for clarity in the main file";
         type = types.submodule {
