@@ -79,7 +79,7 @@ in
     do-publish = app-name: app:
       # Simple dummy script "to do something" when we run publish
       pkgs.writeShellApplication {
-        name = "publish-${app-name}.sh";
+        name = "publish-${app-name}";
         inherit runtimeInputs;
         text = ''
           hash=$(sha256sum "${app}/bin/${app-name}" | cut -d ' ' -f 1)
@@ -87,14 +87,14 @@ in
         '';
       };
     publish-drvs = lib.attrsets.mapAttrs'
-      (app-name: app: lib.nameValuePair "publish-${app-name}.sh" (do-publish app-name app))
+      (app-name: app: lib.nameValuePair "publish-${app-name}" (do-publish app-name app))
       all-packages; # we don't want default in here
     rust-publish = 
       let
         text = lib.attrsets.foldlAttrs (acc: script-name: app: acc + "\n${app}/bin/${script-name}") "" publish-drvs;
       in
       pkgs.writeShellApplication {
-        name = "rust-publish.sh";
+        name = "rust-publish";
         inherit runtimeInputs text;
     };
     final-packages = { inherit rust-publish; } // publish-drvs // rust-packages;

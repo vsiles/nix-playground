@@ -9,10 +9,10 @@ in
   let
     # TODO: make this configurable in case docker or rust is not used
     publish = pkgs.writeShellApplication {
-      name = "publish.sh";
+      name = "publish";
       text = ''
-        ${config.packages.rust-publish}/bin/rust-publish.sh
-        ${config.packages.docker-publish}/bin/docker-publish.sh
+        ${config.packages.rust-publish}/bin/rust-publish
+        ${config.packages.docker-publish}/bin/docker-publish
       '';
     };
   in {

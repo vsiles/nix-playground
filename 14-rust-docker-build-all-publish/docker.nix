@@ -69,9 +69,10 @@ in
             cp ${image} $out/bin
             '';
           };
+          key = builtins.baseNameOf "${image}";
         in
         {
-          ${final-image-name} = drv;
+          ${final-image-name} = { inherit key drv; };
         };
       mkImage = {app-name, image-name} :
         buildDocker {
@@ -83,30 +84,32 @@ in
       docker-packages = lib.lists.foldl (acc: app-info: acc // (mkImage app-info)) {}
             config.dockerConfiguration.packages;
       # Simple dummy script "to do something" when we run publish
-      do-publish = app-name: app:
+      do-publish = app-name: {key, drv}:
         pkgs.writeShellApplication {
-          name = "publish-${app-name}.sh";
+          name = "publish-${app-name}";
           runtimeInputs = [ pkgs.coreutils ];
           # TODO: not working yet: app-name is not the right input here
           text = ''
-            hash=$(sha256sum "${app}/bin/${app-name}" | cut -d ' ' -f 1)
+            hash=$(sha256sum "${drv}/bin/${key}" | cut -d ' ' -f 1)
             echo "hash for ${app-name}: ''${hash}"
           '';
         };
       publish-drvs = lib.attrsets.mapAttrs'
-        (app-name: app: lib.nameValuePair "publish-${app-name}.sh" (do-publish app-name app))
+        (app-name: info: lib.nameValuePair "publish-${app-name}" (do-publish app-name info))
         docker-packages;
       docker-publish = 
         let
           text = lib.attrsets.foldlAttrs (acc: script-name: app: acc + "\n${app}/bin/${script-name}") "" publish-drvs;
         in
         pkgs.writeShellApplication {
-          name = "docker-publish.sh";
+          name = "docker-publish";
           inherit text;
       };
-      final-packages = { inherit docker-publish; } // publish-drvs // docker-packages;
+      final-docker-packages =
+        lib.attrsets.mapAttrs (_: {drv, ...}: drv) docker-packages;
+      final-packages = { inherit docker-publish; } // publish-drvs // final-docker-packages;
       in {
-        dockerPackages = builtins.attrValues docker-packages;
+        dockerPackages = builtins.attrValues final-docker-packages;
         packages = final-packages;
     };
   });

@@ -1,7 +1,7 @@
 ```bash
 $ direnv allow
 $ nix flake check
-$ nix build .#allow
+$ nix build .#all
 $ tree result
 result/:
 total 1332
