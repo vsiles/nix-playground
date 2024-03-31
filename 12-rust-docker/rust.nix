@@ -64,10 +64,11 @@ in
       lib.lists.foldl (acc: name: acc // {"${name}" = op name; })
       {} config.rustConfiguration.members;
     default =
+      # TODO: change this check, only require default for run, not for build
       if config.rustConfiguration.is-workspace then (
         # TODO: check if manifest.workspace.package is set or not
         if config.rustConfiguration.default-package == null 
-        then builtins.throw "workspace mut set the default-package option"
+        then builtins.throw "workspace must set the default-package option"
         else all-packages.${config.rustConfiguration.default-package}
       ) else my-rust-project;
   in

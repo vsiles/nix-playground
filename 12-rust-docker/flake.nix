@@ -33,7 +33,6 @@
         };
         dockerConfiguration = {
           app-name = "app_a";
-          app = config.packages.app_a;
         };
 
         # packages & checks & devShell are coming from the rust.nix module !

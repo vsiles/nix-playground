@@ -18,28 +18,35 @@ in
               type = types.str;
               description = "Name of the single app to build an image for";
             };
-            # TODO: try to infer it
-            app = mkOption {
-              type = types.package;
-              description = "The single app to build an image for";
+            image-name = mkOption {
+              type = types.nullOr types.str;
+              description = "Name of the image, if it needs to be different from the app name";
+              default = null;
             };
           };
         };
       };
     };
+    # TODO: support tag :)
     config =
-      let
-        bin = config.dockerConfiguration.app;
-        name = config.dockerConfiguration.app-name;
-      in {
-        packages.dockerImage = pkgs.dockerTools.buildImage {
-          inherit name;
+      let buildDocker = {app-name, image-name, app} :
+        let final-image-name = if image-name == null then app-name else image-name; in
+        pkgs.dockerTools.buildImage {
+          name = final-image-name;
           tag = "latest";
-          copyToRoot = [ bin ];
+          copyToRoot = [ app ];
           config = {
-            Cmd = [ "${bin}/bin/${name}" ];
+            Cmd = [ "${app}/bin/${app-name}" ];
           };
+      };
+      inherit (config.dockerConfiguration) app-name image-name;
+      in {
+        packages.dockerImage = buildDocker {
+          inherit app-name image-name;
+          app = if builtins.hasAttr app-name config.packages then
+            config.packages.${app-name}
+            else builtins.throw "Can't find application ${app-name}";
         };
-    };
+      };
   });
 }
