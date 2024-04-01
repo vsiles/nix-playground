@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     mylocalrepo.url = "git+file:///home/vsiles/test-nix/nix-playground";
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    }; 
   };
 
   outputs = inputs@{ mylocalrepo, flake-parts, ... }:
