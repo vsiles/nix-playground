@@ -99,10 +99,10 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "dirtyRev": "46f5325b9ee24d7d9c2b756894fc58175209b643-dirty",
-        "dirtyShortRev": "46f5325-dirty",
-        "lastModified": 1711909119,
-        "narHash": "sha256-+1Xkln2nnwCczjpjBkvsXXleChkUlOeo2b0k54vHt2s=",
+        "dirtyRev": "ebf4b44931e12eb029679b1d11c8c783afe521ed-dirty",
+        "dirtyShortRev": "ebf4b44-dirty",
+        "lastModified": 1711959225,
+        "narHash": "sha256-629jqZQ8zZjwrVdw/6wh8ExEpaypFFk6xv3m6LOkiO0=",
         "type": "git",
         "url": "file:///home/vsiles/test-nix/nix-playground"
       },
