@@ -16,7 +16,7 @@
     nix2container.url = "github:nlewo/nix2container";
   };
 
-  outputs = { flake-parts, ... }: {
+  outputs = { flake-parts, crane, ... }: {
     flakeModule = ./flake-module.nix;
   };
 }
