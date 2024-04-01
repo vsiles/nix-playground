@@ -3,11 +3,17 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # TODO: understand how/if we can inherit inputs from our flake
     mylocalrepo.url = "git+file:///home/vsiles/test-nix/nix-playground";
     crane = {
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
     }; 
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
+    nix2container.url = "github:nlewo/nix2container";
   };
 
   outputs = inputs@{ mylocalrepo, flake-parts, ... }:
