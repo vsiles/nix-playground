@@ -18,31 +18,24 @@
         ./vm.nix
         ./svc-module.nix
       ];
-      linux-pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      linux-pkgs = nixpkgs.legacyPackages.x86_64-linux.extend axumServer.overlays.default;
       darwin-pkgs = nixpkgs.legacyPackages.aarch64-darwin;
-      specialArgs = {
-        inherit axumServer;
-      };
     in
     {
       nixosConfigurations.linuxVM = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = my_modules;
-        inherit specialArgs;
+        modules = [
+          { nixpkgs.overlays = [ axumServer.overlays.default ]; }
+        ] ++ my_modules;
       };
       packages.x86_64-linux.vm = self.nixosConfigurations.linuxVM.config.system.build.vm;
       packages.x86_64-linux.test = linux-pkgs.testers.runNixOSTest {
         name = "VM Test (linux)";
-        inherit specialArgs;
 
         nodes.machine =
           { config, pkgs, ... }:
           {
-            imports = [
-              ./base.nix
-              ./vm.nix
-              ./svc-module.nix
-            ];
+            imports = my_modules;
 
             users.users.alice = {
               isNormalUser = true;
@@ -55,18 +48,19 @@
           machine.wait_for_unit("default.target");
           machine.succeed("su -- alice -c 'which tree'")
           machine.succeed("su -- test -c 'which jq'")
+          result = machine.succeed("ps aux | grep svc")
+          print(result)
         '';
       };
 
       nixosConfigurations.darwinVM = nixpkgs.lib.nixosSystem {
         system = "aarch64-linux";
-        modules = my_modules ++ [
+        modules = [
+          # TODO: Maybe overlay darwin-pkgs too / instead ?
+          { nixpkgs.overlays = [ axumServer.overlays.default ]; }
           # This VM will use the host /nix/store thus avoid 'Exec format error'
           { virtualisation.vmVariant.virtualisation.host.pkgs = darwin-pkgs; }
-        ];
-        specialArgs = {
-          inherit axumServer;
-        };
+        ] ++ my_modules;
       };
       packages.aarch64-darwin.vm = self.nixosConfigurations.darwinVM.config.system.build.vm;
     };

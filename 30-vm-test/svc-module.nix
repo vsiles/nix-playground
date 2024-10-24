@@ -1,8 +1,7 @@
-{ config, pkgs, axumServer, ... }:
+{ config, pkgs, ... }:
     let
-      system = pkgs.system;
-      axumServerPackage = axumServer.packages.${system}.default;
-      test_command = axumServer.packages.${system}.test_command;
+      axumServerPackage = pkgs.svc;
+      test_command = pkgs.test_command;
     in
 {
   systemd.services.axum-echo-server = {
