@@ -12,7 +12,10 @@
       nixpkgs,
       axumServer,
     }:
-    {
+    let
+      darwin-pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+      recursiveUpdate = darwin-pkgs.lib.recursiveUpdate;
+      linux-pkgs = nixpkgs.legacyPackages.aarch64-linux;
       nixosModules.base =
         { pkgs, ... }:
         {
@@ -51,12 +54,13 @@
         {
           virtualisation.vmVariant.virtualisation.graphics = false;
         };
-
+    in
+    {
       nixosConfigurations.linuxVM = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          self.nixosModules.base
-          self.nixosModules.vm
+          nixosModules.base
+          nixosModules.vm
           ./svc-module.nix
         ];
         specialArgs = {
@@ -68,12 +72,12 @@
       nixosConfigurations.darwinVM = nixpkgs.lib.nixosSystem {
         system = "aarch64-linux";
         modules = [
-          self.nixosModules.base
-          self.nixosModules.vm
+          nixosModules.base
+          nixosModules.vm
           ./svc-module.nix
           # This VM will use the host /nix/store thus avoid 'Exec format error'
           {
-            virtualisation.vmVariant.virtualisation.host.pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+            virtualisation.vmVariant.virtualisation.host.pkgs = darwin-pkgs;
           }
         ];
         specialArgs = {
@@ -81,5 +85,42 @@
         };
       };
       packages.aarch64-darwin.vm = self.nixosConfigurations.darwinVM.config.system.build.vm;
+
+      # Testing nixos tests
+      # https://nix.dev/tutorials/nixos/integration-testing-using-virtual-machines.html
+      # 
+      packages.aarch64-darwin.test = darwin-pkgs.testers.runNixOSTest {
+        name = "My simple test";
+        nodes.machine = { config, pkgs, ... }@inputs: 
+          recursiveUpdate 
+        (nixosModules.base inputs) {
+
+          users.users.alice = {
+            isNormalUser = true;
+            extraGroups = [ "wheel" ];
+            packages = with pkgs; [
+              tree
+            ];
+          };
+
+          system.stateVersion = "24.05";
+        };
+        testScript = ''
+          machine.wait_for_unit("default.target")
+
+          machine.succeed("su -- alice -c 'which tree'")
+          machine.fail("su -- alice -c  'which hx'")
+          # uncomment to see a test failure
+          # machine.succeed("su -- alice -c  'which hx'")
+
+          # Waiting for the service
+          machine.succeed("systemctl is-active axum-echo-server")
+
+          # Calling GET
+          get_response = machine.succeed("${linux-pkgs.curl}/bin/curl http://localhost:3000 -X GET")
+          assert get_response == "Hello, You!"
+
+        '';
+      };
     };
 }
