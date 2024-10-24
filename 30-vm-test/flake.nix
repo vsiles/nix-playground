@@ -50,6 +50,10 @@
           machine.succeed("su -- test -c 'which jq'")
           result = machine.succeed("ps aux | grep svc")
           print(result)
+          # Testing GET
+          result = machine.succeed("${linux-pkgs.curl}/bin/curl http://localhost:3000 -X GET")
+          assert result == "Hello, You!"
+          
         '';
       };
 
