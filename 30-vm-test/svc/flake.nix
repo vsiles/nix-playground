@@ -3,8 +3,6 @@
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-24.05";
-    helpkgs.url = "gitlab:pierre-etienne.meunier/helpkgs/develop?host=gitlab.helsing-dev.ai";
-    helpkgs.inputs.nixpkgs.follows = "nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
@@ -14,7 +12,6 @@
   outputs =
     {
       self,
-      helpkgs,
       nixpkgs,
       flake-utils,
       rust-overlay,
@@ -27,7 +24,6 @@
           inherit system;
           overlays = [
             rust-overlay.overlays.default
-            helpkgs.overlays.${system}
           ];
         };
         lib = pkgs.lib;
@@ -57,15 +53,6 @@
           }
         );
 
-        # Just a test for PE's overlay. We build the same package with a different builder
-        packages.svc-pe = pkgs.rustPlatform.buildRustPackage {
-          pname = "axum-echo-server";
-          version = "0.1.0";
-          src = ./.;
-          # cargoLock = ./Cargo.lock;
-          cargoHash = "sha256-F5/EkZ/s7/fwt4+g9Vfv9Kq16oNt/GIJ/CqdrJ8sSmI=";
-          inherit buildInputs;
-        };
 
         devShells.default = pkgs.mkShell {
           buildInputs = [
