@@ -23,13 +23,24 @@
         ./svc-module.nix
         ./opengl-module.nix
       ];
-      overlayApply = pkgs: (pkgs.extend axumServer.overlays.default).extend openglStuff.overlays.default;
+      openglStuffOverlay =
+        final: prev:
+        {
+
+          vsiles-gl = prev.vsiles-gl.overrideAttrs (oldAttrs: {
+            nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ prev.mesa.llvmpipeHook ];
+          });
+        };
+      overlayApply =
+        pkgs:
+        ((pkgs.extend axumServer.overlays.default).extend openglStuff.overlays.default).extend openglStuffOverlay;
       linux-pkgs = overlayApply nixpkgs.legacyPackages.x86_64-linux;
       darwin-pkgs = overlayApply nixpkgs.legacyPackages.aarch64-darwin;
       linux-guest-pkgs = overlayApply nixpkgs.legacyPackages.aarch64-linux;
       myOverlays = [
         axumServer.overlays.default
         openglStuff.overlays.default
+        openglStuffOverlay
       ];
       tester =
         {

@@ -35,6 +35,7 @@
             inherit buildInputs;
             nativeBuildInputs = [
               pkgs.pkg-config
+              pkgs.mesa.llvmpipeHook
             ];
           };
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
