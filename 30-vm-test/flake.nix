@@ -1,7 +1,7 @@
 {
   description = "Test VM";
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.05";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
     axumServer = {
       url = "path:./svc";
     };
