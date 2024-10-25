@@ -1,9 +1,12 @@
 {
   description = "Test VM";
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.05";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
     axumServer = {
       url = "path:./svc";
+    };
+    openglStuff = {
+      url = "path:./vsiles-gl";
     };
   };
   outputs =
@@ -11,16 +14,34 @@
       self,
       nixpkgs,
       axumServer,
+      openglStuff,
     }:
     let
       my_modules = [
         ./base.nix
         ./vm.nix
         ./svc-module.nix
+        ./opengl-module.nix
       ];
-      linux-pkgs = nixpkgs.legacyPackages.x86_64-linux.extend axumServer.overlays.default;
-      darwin-pkgs = nixpkgs.legacyPackages.aarch64-darwin.extend axumServer.overlays.default;
-      linux-guest-pkgs = nixpkgs.legacyPackages.aarch64-linux.extend axumServer.overlays.default;
+      openglStuffOverlay =
+        final: prev:
+        {
+
+          vsiles-gl = prev.vsiles-gl.overrideAttrs (oldAttrs: {
+            nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ prev.mesa.llvmpipeHook ];
+          });
+        };
+      overlayApply =
+        pkgs:
+        ((pkgs.extend axumServer.overlays.default).extend openglStuff.overlays.default).extend openglStuffOverlay;
+      linux-pkgs = overlayApply nixpkgs.legacyPackages.x86_64-linux;
+      darwin-pkgs = overlayApply nixpkgs.legacyPackages.aarch64-darwin;
+      linux-guest-pkgs = overlayApply nixpkgs.legacyPackages.aarch64-linux;
+      myOverlays = [
+        axumServer.overlays.default
+        openglStuff.overlays.default
+        openglStuffOverlay
+      ];
       tester =
         {
           host-pkgs,
@@ -49,7 +70,7 @@
             result = machine.succeed("ps aux | grep svc")
             print(result)
             # Testing GET
-            result = machine.succeed("${guest-pkgs.curl}/bin/curl http://localhost:3000 -X GET")
+            result = machine.succeed("${guest-pkgs.curl}/bin/curl -X GET http://localhost:3000")
             assert result == "Hello, You!"
 
           '';
@@ -59,7 +80,7 @@
       nixosConfigurations.linuxVM = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          { nixpkgs.overlays = [ axumServer.overlays.default ]; }
+          { nixpkgs.overlays = myOverlays; }
         ] ++ my_modules;
       };
       packages.x86_64-linux.vm = self.nixosConfigurations.linuxVM.config.system.build.vm;
@@ -72,7 +93,7 @@
       nixosConfigurations.darwinVM = nixpkgs.lib.nixosSystem {
         system = "aarch64-linux";
         modules = [
-          { nixpkgs.overlays = [ axumServer.overlays.default ]; }
+          { nixpkgs.overlays = myOverlays; }
           # This VM will use the host /nix/store thus avoid 'Exec format error'
           { virtualisation.vmVariant.virtualisation.host.pkgs = darwin-pkgs; }
         ] ++ my_modules;
